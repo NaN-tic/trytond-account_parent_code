@@ -10,12 +10,10 @@ if os.path.isdir(DIR):
     sys.path.insert(0, os.path.dirname(DIR))
 
 import unittest
-import datetime
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import test_view, test_depends
 from trytond.tests.test_tryton import POOL, DB_NAME, USER, CONTEXT
 from trytond.transaction import Transaction
-from trytond.wizard import Session
 
 
 class AccountParentCodeTestCase(unittest.TestCase):
@@ -27,8 +25,6 @@ class AccountParentCodeTestCase(unittest.TestCase):
         trytond.tests.test_tryton.install_module('account_parent_code')
         self.account_template = POOL.get('account.account.template')
         self.account = POOL.get('account.account')
-        self.account_create_chart = POOL.get(
-            'account.create_chart', type='wizard')
         self.company = POOL.get('company.company')
         self.user = POOL.get('res.user')
         self.fiscalyear = POOL.get('account.fiscalyear')
@@ -50,101 +46,74 @@ class AccountParentCodeTestCase(unittest.TestCase):
         'Test creation of minimal chart of accounts'
         with Transaction().start(DB_NAME, USER,
                 context=CONTEXT) as transaction:
-            company_id, = self.company.search([('name', '=', 'B2CK')])
-            self.user.write(USER, {
-                    'main_company': company_id,
-                    'company': company_id,
+            company, = self.company.search([('party.name', '=', 'B2CK')])
+            self.user.write([self.user(USER)], {
+                    'main_company': company.id,
+                    'company': company.id,
                     })
-            root_id = self.account.create({
-                    'name': 'root',
-                    'code': '',
-                    'kind': 'view',
-                    'company': company_id,
+            root, = self.account.create([{
+                        'name': 'root',
+                        'code': '',
+                        'kind': 'view',
+                        'company': company.id,
+                        }])
+            account_1, = self.account.create([{
+                        'name': 'root',
+                        'code': '1',
+                        'kind': 'view',
+                        'company': company.id,
+                        }])
+            account_100, = self.account.create([{
+                        'name': 'root',
+                        'code': '100',
+                        'kind': 'view',
+                        'company': company.id,
+                        }])
+            account_10, = self.account.create([{
+                        'name': 'root',
+                        'code': '10',
+                        'kind': 'view',
+                        'company': company.id,
+                        }])
+            account_2, = self.account.create([{
+                        'name': 'root',
+                        'code': '2',
+                        'kind': 'view',
+                        'company': company.id,
+                        }])
+
+            account, = self.account.search([('code', '=', '2')])
+            self.assertEqual(account, account_2)
+            self.assertEqual(account.parent, root)
+
+            account, = self.account.search([('code', '=', '100')])
+            self.assertEqual(account, account_100)
+            self.assertEqual(account.parent, account_10)
+            self.assertEqual(account.parent.parent, account_1)
+            self.assertEqual(account.parent.parent.parent, root)
+
+            self.account.delete([account_10])
+            self.assertEqual(account_100.parent, account_1)
+
+            self.account.write([account_1], {
+                    'code': '20'
                     })
-            account_1_id = self.account.create({
-                    'name': 'root',
+            self.assertEqual(account_100.parent, root)
+            self.assertEqual(account_1.parent, account_2)
+
+            self.account.delete([account_2])
+            self.assertEqual(account_1.parent, root)
+            self.account.delete([root])
+            self.assertEqual(account_1.parent, None)
+            self.assertEqual(account_100.parent, None)
+            self.account.write([account_1], {
                     'code': '1',
-                    'kind': 'view',
-                    'company': company_id,
                     })
-            account_100_id = self.account.create({
-                    'name': 'root',
-                    'code': '100',
-                    'kind': 'view',
-                    'company': company_id,
-                    })
-            account_10_id = self.account.create({
-                    'name': 'root',
-                    'code': '10',
-                    'kind': 'view',
-                    'company': company_id,
-                    })
-            account_2_id = self.account.create({
-                    'name': 'root',
-                    'code': '2',
-                    'kind': 'view',
-                    'company': company_id,
-                    })
-
-            account_id, = self.account.search([('code', '=', '2')])
-            account = self.account.browse(account_id)
-            self.assertEqual(account.id, account_2_id)
-            self.assertEqual(account.parent.id, root_id)
-
-            account_id, = self.account.search([('code', '=', '100')])
-            account = self.account.browse(account_id)
-            self.assertEqual(account.id, account_100_id)
-            self.assertEqual(account.parent.id, account_10_id)
-            self.assertEqual(account.parent.parent.id, account_1_id)
-            self.assertEqual(account.parent.parent.parent.id, root_id)
-
-            #self.account.delete(account_10_id)
-            #self.account.delete(account_1_id)
-            account = self.account.browse(account_100_id)
-            print "1: ", account_1_id
-            print "10: ", account_10_id
-            print "100: ", account_100_id
-            print "ACC: ", account.parent
-            self.assertEqual(account.parent.id, account_1_id)
-
-#    def test0020account_chart(self):
-#        'Test creation of minimal chart of accounts'
-#        with Transaction().start(DB_NAME, USER,
-#                context=CONTEXT) as transaction:
-#            account_template_id, = self.account_template.search([
-#                ('parent', '=', False),
-#                ])
-#            company_id, = self.company.search([('name', '=', 'B2CK')])
-#            self.user.write(USER, {
-#                    'main_company': company_id,
-#                    'company': company_id,
-#                    })
-#            CONTEXT.update(self.user.get_preferences(context_only=True))
-#
-#            
-#            session_id, _, _ = self.account_create_chart.create()
-#            session = Session(self.account_create_chart, session_id)
-#            session.data['account'].update({
-#                    'account_template': account_template_id,
-#                    'company': company_id,
-#                    })
-#            self.account_create_chart.transition_create_account(session)
-#            receivable_id, = self.account.search([
-#                    ('kind', '=', 'receivable'),
-#                    ('company', '=', company_id),
-#                    ])
-#            payable_id, = self.account.search([
-#                    ('kind', '=', 'payable'),
-#                    ('company', '=', company_id),
-#                    ])
-#            session.data['properties'].update({
-#                    'company': company_id,
-#                    'account_receivable': receivable_id,
-#                    'account_payable': payable_id,
-#                    })
-#            self.account_create_chart.transition_create_properties(
-#                session)
-#            transaction.cursor.commit()
+            self.assertEqual(account_100.parent, account_1)
+            self.account.delete([account_100])
+            self.assertEqual(account_1.childs, ())
+            self.account.delete([account_1])
+            self.assertEqual(self.account.search([]), [])
 
 def suite():
     suite = trytond.tests.test_tryton.suite()

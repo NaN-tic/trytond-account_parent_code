@@ -1,74 +1,60 @@
-#This file is part of Tryton.  The COPYRIGHT file at the top level of
-#this repository contains the full copyright notices and license terms.
-import copy
-from trytond.model import ModelView, ModelSQL, fields
-from trytond.pool import Pool
+#The COPYRIGHT file at the top level of this repository contains the full
+#copyright notices and license terms.
+from trytond.model import ModelView, ModelSQL
+from itertools import izip
 
-
-class AccountTemplate(ModelSQL, ModelView):
-    _name = 'account.account.template'
-
-    code = fields.Char('Code', size=None, select=True)
-    parent = fields.Many2One('account.account.template', 'Parent', select=True,
-            ondelete="RESTRICT")
-
-#AccountTemplate()
+__all__ = ['Account']
 
 
 class Account(ModelSQL, ModelView):
-    _name = 'account.account'
+    __name__ = 'account.account'
 
-    def __init__(self):
-        super(Account, self).__init__()
-        self.parent = copy.copy(self.parent)
-        self.parent.readonly = True
-        self._reset_columns()
-        self._sql_constraints += [
+    @classmethod
+    def __setup__(cls):
+        super(Account, cls).__setup__()
+        cls.parent.readonly = True
+        cls._sql_constraints += [
             ('code_uniq', 'UNIQUE(code, company)', 'Account Code must be '
                 'unique per company.'),
             ]
 
-    def update_children(self, id, code):
+    @classmethod
+    def _find_children(cls, id, code):
         if not code:
             return
-        # Set parent for children
-        account_ids = self.search([
+        accounts = cls.search([
                 ('id', '!=', id),
                 ('code', 'ilike', '%s%%' % code),
                 ('kind', '=', 'view'),
                 ])
-        accounts = self.browse(account_ids)
-        ids_to_update = []
+        to_update = []
         for account in accounts:
             if account.parent and account.parent.code is None:
                 continue
-            if len(account.parent.code) < len(code):
-                ids_to_update.append(account.id)
+            if not account.parent or len(account.parent.code) < len(code):
+                to_update.append(account)
                 continue
-        prefixes = [x.code for x in accounts]
         domain = [
             ('id', '!=', id),
-            ('code', 'ilike', '%s%%' % code), 
+            ('code', 'ilike', '%s%%' % code),
             ]
-        domain += [('code', 'not ilike', '%s%%' % x) for x in prefixes]
-        ids_to_update += self.search(domain)
-        if ids_to_update:
-            self.write(ids_to_update, {
-                    'parent': id,
-                    })
+        domain += [('code', 'not ilike', '%s%%' % x.code) for x in accounts]
+        to_update += cls.search(domain)
+        return to_update
 
-    def update_parent(self, code, invalid_ids=None):
+    @classmethod
+    def _find_parent(cls, code, invalid_ids=None):
         if not code:
             return
         if invalid_ids is None:
             invalid_ids = []
         # Set parent for current record
-        ids = self.search([
+        accounts = cls.search([
                 ('id', 'not in', invalid_ids),
                 ('kind', '=', 'view')
                 ])
         parent = None
-        for account in self.browse(ids):
+        for account in accounts:
             if account.code is None:
                 continue
             if code.startswith(account.code):
@@ -76,40 +62,50 @@ class Account(ModelSQL, ModelView):
                     parent = account
         return parent.id if parent else None
 
-    def create(self, vals):
-        code = vals.get('code')
-        if code and 'parent' not in vals:
-            vals = vals.copy()
-            vals['parent'] = self.update_parent(code)
-        id = super(Account, self).create(vals)
-        if code and vals.get('kind') == 'view':
-            self.update_children(id, code)
-        return id
+    @classmethod
+    def create(cls, vlist):
+        vlist = [x.copy() for x in vlist]
+        for vals in vlist:
+            code = vals.get('code')
+            if code and 'parent' not in vals:
+                vals['parent'] = cls._find_parent(code)
+        accounts = super(Account, cls).create(vlist)
+        for account, vals in izip(accounts, vlist):
+            code = vals.get('code')
+            if code and vals.get('kind') == 'view':
+                to_update = cls._find_children(account.id, code)
+                if to_update:
+                    cls.write(to_update, {
+                            'parent': account.id,
+                            })
+        return accounts
 
-    #def write(self, ids, vals):
-        #code = vals.get('code')
-        #
-        #if code and 'parent' not in vals:
-            #if len(ids) > 1:
-                #
-        #res = super(Account, self).write(ids, vals)
-        #return res
-
-    def delete(self, ids):
-        move_line_obj = Pool().get('account.move.line')
-        if isinstance(ids, (int, long)):
-            ids = [ids]
-        account_ids = self.search([('parent', 'in', ids)])
-        for account in self.browse(account_ids):
-            parent_id = self.update_parent(account.code, [account.id] + ids)
-            print "SETTING PARENT %s FOR %s" % (self.browse(parent_id).code, account.code)
-            self.write(account.id, {
-                    'parent': parent_id,
+    @classmethod
+    def write(cls, accounts, vals):
+        if 'code' not in vals and 'kind' not in vals:
+            super(Account, cls).write(accounts, vals)
+            return
+        for account in accounts:
+            cls.write(account.childs, {
+                    'parent': account.parent and account.parent.id,
                     })
-            print "WRITTEN"
-        print "DELETING"
-        return super(Account, self).delete(account_ids)
+            new_vals = vals.copy()
+            if 'code' in vals and 'parent' not in vals:
+                new_vals['parent'] = cls._find_parent(vals['code'],
+                    invalid_ids=[account.id])
+            super(Account, cls).write([account], new_vals)
+            new_account = cls(account.id)
+            if new_account.code and new_account.kind == 'view':
+                to_update = cls._find_children(new_account.id, new_account.code)
+                if to_update:
+                    cls.write(to_update, {
+                            'parent': new_account.id,
+                            })
 
-Account()
-
-
+    @classmethod
+    def delete(cls, accounts):
+        for account in accounts:
+            cls.write(account.childs, {
+                    'parent': account.parent and account.parent.id,
+                    })
+        return super(Account, cls).delete(accounts)
