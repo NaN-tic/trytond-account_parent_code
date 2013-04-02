@@ -1,0 +1,7 @@
+# 
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "error:account.account:"
+msgid "Account Code must be unique per company."
+msgstr "El codi del compte ha de ser únic per cada empresa."
