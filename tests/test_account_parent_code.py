@@ -45,7 +45,7 @@ class AccountParentCodeTestCase(unittest.TestCase):
     def test0010account_chart(self):
         'Test creation of minimal chart of accounts'
         with Transaction().start(DB_NAME, USER,
-                context=CONTEXT) as transaction:
+                context=CONTEXT):
             company, = self.company.search([('party.name', '=', 'B2CK')])
             self.user.write([self.user(USER)], {
                     'main_company': company.id,
