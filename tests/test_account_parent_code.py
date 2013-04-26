@@ -11,7 +11,7 @@ if os.path.isdir(DIR):
 
 import unittest
 import trytond.tests.test_tryton
-from trytond.tests.test_tryton import test_view, test_depends
+from trytond.tests.test_tryton import test_depends
 from trytond.tests.test_tryton import POOL, DB_NAME, USER, CONTEXT
 from trytond.transaction import Transaction
 
@@ -29,12 +29,6 @@ class AccountParentCodeTestCase(unittest.TestCase):
         self.user = POOL.get('res.user')
         self.fiscalyear = POOL.get('account.fiscalyear')
         self.sequence = POOL.get('ir.sequence')
-
-#    def test0005views(self):
-#        '''
-#        Test views.
-#        '''
-#        test_view('account_parent_code')
 
     def test0006depends(self):
         '''
