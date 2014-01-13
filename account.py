@@ -104,6 +104,25 @@ class Account(ModelSQL, ModelView):
                             })
 
     @classmethod
+    def copy(cls, accounts, default=None):
+        if default is None:
+            default = {}
+        if 'code' in default:
+            return super(Account, cls).copy([account], default)
+        default = default.copy()
+        res = []
+        for account in accounts:
+            x = 0
+            while True:
+                x += 1
+                code = '%s (%d)' % (account.code, x)
+                if not cls.search([('code', '=', code)]):
+                    break
+            default['code'] = code
+            res += super(Account, cls).copy([account], default)
+        return res
+
+    @classmethod
     def delete(cls, accounts):
         for account in accounts:
             cls.write(account.childs, {
