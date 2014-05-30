@@ -86,7 +86,7 @@ class Account(ModelSQL, ModelView):
         actions = iter(args)
         for accounts, values in zip(actions, actions):
             if 'code' not in values and 'kind' not in values:
-                super(Account, cls).write(accounts, values)
+                super(Account, cls).write(*args)
                 continue
             for account in accounts:
                 cls.write(account.childs, {
@@ -111,7 +111,7 @@ class Account(ModelSQL, ModelView):
         if default is None:
             default = {}
         if 'code' in default:
-            return super(Account, cls).copy([account], default)
+            return super(Account, cls).copy(accounts, default)
         default = default.copy()
         res = []
         for account in accounts:
@@ -128,7 +128,7 @@ class Account(ModelSQL, ModelView):
     @classmethod
     def delete(cls, accounts):
         for account in accounts:
-            cls.write(account.childs, {
+            cls.write(list(account.childs), {
                     'parent': account.parent and account.parent.id,
                     })
         return super(Account, cls).delete(accounts)
