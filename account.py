@@ -86,12 +86,13 @@ class Account(ModelSQL, ModelView):
         actions = iter(args)
         for accounts, values in zip(actions, actions):
             if 'code' not in values and 'kind' not in values:
-                super(Account, cls).write(*args)
+                super(Account, cls).write(accounts, values)
                 continue
             for account in accounts:
-                cls.write(account.childs, {
-                        'parent': account.parent and account.parent.id,
-                        })
+                if account.childs:
+                    cls.write(account.childs, {
+                            'parent': account.parent and account.parent.id,
+                            })
                 new_values = values.copy()
                 if 'code' in values and 'parent' not in values:
                     new_values['parent'] = cls._find_parent(values['code'],
