@@ -100,7 +100,7 @@ class AccountParentCodeTestCase(unittest.TestCase):
             self.account.delete([account_100])
             self.assertEqual(account_1.childs, ())
             self.account.delete([account_1])
-            self.assertEqual(self.account.search([]), [])
+
 
 
 def suite():
