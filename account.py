@@ -87,26 +87,28 @@ class Account(ModelSQL, ModelView):
         to_check = []
         for accounts, values in zip(actions, actions):
             if 'code' in values or 'kind' in values:
-                to_check += accounts
+                to_check += [accounts, values]
         super(Account, cls).write(*args)
-        for account in to_check:
-            if account.childs:
-                cls.write(list(account.childs), {
-                        'parent': account.parent and account.parent.id,
-                        })
-            new_values = values.copy()
-            if 'code' in values and 'parent' not in values:
-                new_values['parent'] = cls._find_parent(values['code'],
-                    invalid_ids=[account.id])
-            super(Account, cls).write([account], new_values)
-            new_account = cls(account.id)
-            if new_account.code and new_account.kind == 'view':
-                to_update = cls._find_children(new_account.id,
-                    new_account.code)
-                if to_update:
-                    cls.write(to_update, {
-                            'parent': new_account.id,
+        to_check = iter(to_check)
+        for accounts, values in zip(to_check, to_check):
+            for account in accounts:
+                if account.childs:
+                    cls.write(list(account.childs), {
+                            'parent': account.parent and account.parent.id,
                             })
+                new_values = values.copy()
+                if 'code' in values and 'parent' not in values:
+                    new_values['parent'] = cls._find_parent(values['code'],
+                        invalid_ids=[account.id])
+                super(Account, cls).write([account], new_values)
+                new_account = cls(account.id)
+                if new_account.code and new_account.kind == 'view':
+                    to_update = cls._find_children(new_account.id,
+                        new_account.code)
+                    if to_update:
+                        cls.write(to_update, {
+                                'parent': new_account.id,
+                                })
 
     @classmethod
     def copy(cls, accounts, default=None):

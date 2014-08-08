@@ -28,8 +28,8 @@ class AccountParentCodeTestCase(unittest.TestCase):
         '''
         test_depends()
 
-    def test0010account_chart(self):
-        'Test creation of minimal chart of accounts'
+    def test0010parent_code(self):
+        'Test parent code'
         with Transaction().start(DB_NAME, USER,
                 context=CONTEXT):
             company, = self.company.search([
@@ -100,7 +100,6 @@ class AccountParentCodeTestCase(unittest.TestCase):
             self.account.delete([account_100])
             self.assertEqual(account_1.childs, ())
             self.account.delete([account_1])
-
 
 
 def suite():
