@@ -2,7 +2,6 @@ trytond_account_parent_code
 ===========================
 
 The account_parent_code module of the Tryton application platform.
-See __tryton__.py
 
 Installing
 ----------
