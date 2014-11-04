@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-#This file is part of Tryton.  The COPYRIGHT file at the top level of
-#this repository contains the full copyright notices and license terms.
+# This file is part of Tryton.  The COPYRIGHT file at the top level of
+# this repository contains the full copyright notices and license terms.
 import unittest
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import test_depends
@@ -9,9 +9,7 @@ from trytond.transaction import Transaction
 
 
 class AccountParentCodeTestCase(unittest.TestCase):
-    '''
-    Test AccountParentCode module.
-    '''
+    'Test AccountParentCode module'
 
     def setUp(self):
         trytond.tests.test_tryton.install_module('account_parent_code')
@@ -23,9 +21,7 @@ class AccountParentCodeTestCase(unittest.TestCase):
         self.sequence = POOL.get('ir.sequence')
 
     def test0006depends(self):
-        '''
-        Test depends.
-        '''
+        'Test depends'
         test_depends()
 
     def test0010parent_code(self):
