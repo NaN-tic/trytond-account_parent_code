@@ -1,8 +1,9 @@
 #This file is part account_parent_code module for Tryton.
 #The COPYRIGHT file at the top level of this repository contains
 #the full copyright notices and license terms.
-from trytond.model import ModelView, ModelSQL
 from itertools import izip
+from trytond.model import ModelView, ModelSQL
+from trytond.transaction import Transaction
 
 __all__ = ['Account']
 
@@ -20,10 +21,11 @@ class Account(ModelSQL, ModelView):
             ]
 
     @classmethod
-    def _find_children(cls, id, code):
+    def _find_children(cls, id, code, company_id):
         if not code:
             return
         accounts = cls.search([
+                ('company', '=', company_id),
                 ('id', '!=', id),
                 ('code', 'ilike', '%s%%' % code),
                 ('kind', '=', 'view'),
@@ -36,6 +38,7 @@ class Account(ModelSQL, ModelView):
                 to_update.append(account)
                 continue
         domain = [
+            ('company', '=', company_id),
             ('id', '!=', id),
             ('code', 'ilike', '%s%%' % code),
             ]
@@ -44,16 +47,19 @@ class Account(ModelSQL, ModelView):
         return to_update
 
     @classmethod
-    def _find_parent(cls, code, invalid_ids=None):
+    def _find_parent(cls, code, company_id, invalid_ids=None):
         if not code:
             return
         if invalid_ids is None:
             invalid_ids = []
+        domain = [
+            ('id', 'not in', invalid_ids),
+            ('kind', '=', 'view')
+            ]
+        if company_id:
+            domain.append(('company', '=', company_id))
         # Set parent for current record
-        accounts = cls.search([
-                ('id', 'not in', invalid_ids),
-                ('kind', '=', 'view')
-                ])
+        accounts = cls.search(domain)
         parent = None
         for account in accounts:
             if account.code is None:
@@ -68,13 +74,16 @@ class Account(ModelSQL, ModelView):
         vlist = [x.copy() for x in vlist]
         for vals in vlist:
             code = vals.get('code')
+            company_id = vals.get('company_id',
+                Transaction().context.get('company_id'))
             if code and 'parent' not in vals:
-                vals['parent'] = cls._find_parent(code)
+                vals['parent'] = cls._find_parent(code, company_id)
         accounts = super(Account, cls).create(vlist)
         for account, vals in izip(accounts, vlist):
             code = vals.get('code')
             if code and vals.get('kind') == 'view':
-                to_update = cls._find_children(account.id, code)
+                to_update = cls._find_children(account.id, code,
+                    account.company.id)
                 if to_update:
                     cls.write(to_update, {
                             'parent': account.id,
@@ -99,12 +108,12 @@ class Account(ModelSQL, ModelView):
                 new_values = values.copy()
                 if 'code' in values and 'parent' not in values:
                     new_values['parent'] = cls._find_parent(values['code'],
-                        invalid_ids=[account.id])
+                        account.company.id, invalid_ids=[account.id])
                 super(Account, cls).write([account], new_values)
                 new_account = cls(account.id)
                 if new_account.code and new_account.kind == 'view':
                     to_update = cls._find_children(new_account.id,
-                        new_account.code)
+                        new_account.code, account.company.id)
                     if to_update:
                         cls.write(to_update, {
                                 'parent': new_account.id,
