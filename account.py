@@ -15,7 +15,7 @@ class Account(ModelSQL, ModelView):
     def __setup__(cls):
         super(Account, cls).__setup__()
         # Fields not allowed to modify in accounts created from templates
-        cls._check_account_template = ['code', 'name', 'parent']
+        cls._check_account_template = set(['code'])
         t = cls.__table__()
         cls.parent.readonly = True
         cls._sql_constraints += [
@@ -110,10 +110,9 @@ class Account(ModelSQL, ModelView):
         actions = iter(args)
         to_check = []
         for accounts, values in zip(actions, actions):
-            keys = values.keys()
-            for key in cls._check_account_template:
-                if key in keys:
-                    cls.check_account_template(accounts)
+            if (not Transaction().context.get('update_from_template') and
+                    set(values.keys()) & cls._check_account_template):
+                cls.check_account_template(accounts)
             if 'code' in values or 'kind' in values:
                 to_check += [accounts, values]
         super(Account, cls).write(*args)
@@ -159,9 +158,18 @@ class Account(ModelSQL, ModelView):
 
     @classmethod
     def delete(cls, accounts):
-        cls.check_account_template(accounts)
+        if (not Transaction().context.get('update_from_template')):
+            cls.check_account_template(accounts)
         for account in accounts:
             cls.write(list(account.childs), {
                     'parent': account.parent and account.parent.id,
                     })
         return super(Account, cls).delete(accounts)
+
+    def update_account(self, template2account=None, template2type=None):
+        context = Transaction().context.copy()
+        context['update_from_template'] = True
+        with Transaction().set_context(context):
+            return super(Account, self).update_account(
+                template2account=template2account,
+                template2type=template2type)
