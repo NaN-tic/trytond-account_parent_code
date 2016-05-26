@@ -2,13 +2,15 @@
 #The COPYRIGHT file at the top level of this repository contains
 #the full copyright notices and license terms.
 from itertools import izip
-from trytond.model import ModelView, ModelSQL, Unique
+from trytond.model import Unique
+from trytond.pool import PoolMeta
 from trytond.transaction import Transaction
 
 __all__ = ['Account']
 
 
-class Account(ModelSQL, ModelView):
+class Account:
+    __metaclass__ = PoolMeta
     __name__ = 'account.account'
 
     @classmethod
