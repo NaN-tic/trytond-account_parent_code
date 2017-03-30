@@ -34,6 +34,25 @@ class AccountParentCodeTestCase(unittest.TestCase):
                     'main_company': company.id,
                     'company': company.id,
                     })
+
+            # Account Template
+            tpl_root, = self.account_template.create([{
+                        'name': 'root',
+                        'code': '',
+                        'kind': 'view',
+                        }])
+            tpl_account_1, = self.account_template.create([{
+                        'name': 'Account 1',
+                        'code': '1',
+                        'kind': 'view',
+                        }])
+
+            tpl_account_copy, = self.account_template.copy([tpl_account_1])
+            self.assertEqual(tpl_account_copy.code, '1 (1)')
+            tpl_account_copy2, = self.account_template.copy([tpl_account_1])
+            self.assertEqual(tpl_account_copy2.code, '1 (2)')
+
+            # Account
             root, = self.account.create([{
                         'name': 'root',
                         'code': '',
@@ -41,25 +60,25 @@ class AccountParentCodeTestCase(unittest.TestCase):
                         'company': company.id,
                         }])
             account_1, = self.account.create([{
-                        'name': 'root',
+                        'name': 'Account 1',
                         'code': '1',
                         'kind': 'view',
                         'company': company.id,
                         }])
             account_100, = self.account.create([{
-                        'name': 'root',
+                        'name': 'Account 100',
                         'code': '100',
                         'kind': 'view',
                         'company': company.id,
                         }])
             account_10, = self.account.create([{
-                        'name': 'root',
+                        'name': 'Account 10',
                         'code': '10',
                         'kind': 'view',
                         'company': company.id,
                         }])
             account_2, = self.account.create([{
-                        'name': 'root',
+                        'name': 'Account 2',
                         'code': '2',
                         'kind': 'view',
                         'company': company.id,
@@ -95,8 +114,11 @@ class AccountParentCodeTestCase(unittest.TestCase):
             self.assertEqual(account_100.parent, account_1)
             self.account.delete([account_100])
             self.assertEqual(account_1.childs, ())
-            self.account.delete([account_1])
 
+            account_copy, = self.account.copy([account_1])
+            self.assertEqual(account_copy.code, '1 (1)')
+            account_copy2, = self.account.copy([account_1])
+            self.assertEqual(account_copy2.code, '1 (2)')
 
 def suite():
     suite = trytond.tests.test_tryton.suite()

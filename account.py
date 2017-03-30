@@ -5,7 +5,42 @@ from itertools import izip
 from trytond.pool import PoolMeta
 from trytond.transaction import Transaction
 
-__all__ = ['Account']
+__all__ = ['AccountTemplate', 'Account']
+
+
+class AccountTemplate:
+    __metaclass__ = PoolMeta
+    __name__ = 'account.account.template'
+
+    @classmethod
+    def __setup__(cls):
+        super(AccountTemplate, cls).__setup__()
+        cls._sql_constraints += [
+            ('code_uniq', 'UNIQUE(code, kind)', 'Account Code must be '
+                'unique per kind.'),
+            ]
+
+    @classmethod
+    def copy(cls, templates, default=None):
+        if default is None:
+            default = {}
+        default = default.copy()
+
+        if 'code' in default:
+            return super(AccountTemplate, cls).copy(templates, default)
+
+        new_templates = []
+        for template in templates:
+            if template.code:
+                x = 0
+                while True:
+                    x += 1
+                    code = '%s (%d)' % (template.code, x)
+                    if not cls.search([('code', '=', code)]):
+                        break
+                default['code'] = code
+            new_templates += super(AccountTemplate, cls).copy([template], default=default)
+        return new_templates
 
 
 class Account:
@@ -124,9 +159,11 @@ class Account:
     def copy(cls, accounts, default=None):
         if default is None:
             default = {}
+        default = default.copy()
+
         if 'code' in default:
             return super(Account, cls).copy(accounts, default)
-        default = default.copy()
+
         res = []
         for account in accounts:
             x = 0
