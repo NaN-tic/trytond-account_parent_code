@@ -2,12 +2,9 @@
 # The COPYRIGHT file at the top level of this repository contains the full
 # copyright notices and license terms.
 import unittest
-from trytond.pool import Pool
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import ModuleTestCase, with_transaction
-from trytond.tests.test_tryton import POOL, DB_NAME, USER, CONTEXT
-from trytond.transaction import Transaction
-
+from trytond.pool import Pool
 from trytond.modules.company.tests import create_company, set_company
 
 
@@ -16,13 +13,33 @@ class AccountParentCodeTestCase(ModuleTestCase):
     module = 'account_parent_code'
 
     @with_transaction()
-    def test0010parent_code(self):
+    def test_parent_code(self):
         'Test parent code'
         pool = Pool()
+        AccountTemplate = pool.get('account.account.template')
         Account = pool.get('account.account')
 
         company = create_company()
         with set_company(company):
+
+            # Account Template
+            tpl_root, = AccountTemplate.create([{
+                        'name': 'root',
+                        'code': '',
+                        'kind': 'view',
+                        }])
+            tpl_account_1, = AccountTemplate.create([{
+                        'name': 'Account 1',
+                        'code': '1',
+                        'kind': 'view',
+                        }])
+
+            tpl_account_copy, = AccountTemplate.copy([tpl_account_1])
+            self.assertEqual(tpl_account_copy.code, '1 (1)')
+            tpl_account_copy2, = AccountTemplate.copy([tpl_account_1])
+            self.assertEqual(tpl_account_copy2.code, '1 (2)')
+
+            # Account
             root, = Account.create([{
                         'name': 'root',
                         'code': '',
@@ -30,25 +47,25 @@ class AccountParentCodeTestCase(ModuleTestCase):
                         'company': company.id,
                         }])
             account_1, = Account.create([{
-                        'name': 'root',
+                        'name': 'Account 1',
                         'code': '1',
                         'kind': 'view',
                         'company': company.id,
                         }])
             account_100, = Account.create([{
-                        'name': 'root',
+                        'name': 'Account 100',
                         'code': '100',
                         'kind': 'view',
                         'company': company.id,
                         }])
             account_10, = Account.create([{
-                        'name': 'root',
+                        'name': 'Account 10',
                         'code': '10',
                         'kind': 'view',
                         'company': company.id,
                         }])
             account_2, = Account.create([{
-                        'name': 'root',
+                        'name': 'Account 2',
                         'code': '2',
                         'kind': 'view',
                         'company': company.id,
@@ -85,6 +102,10 @@ class AccountParentCodeTestCase(ModuleTestCase):
             Account.delete([account_100])
             self.assertEqual(account_1.childs, ())
 
+            account_copy, = Account.copy([account_1])
+            self.assertEqual(account_copy.code, '1 (1)')
+            account_copy2, = Account.copy([account_1])
+            self.assertEqual(account_copy2.code, '1 (2)')
 
 def suite():
     suite = trytond.tests.test_tryton.suite()
