@@ -2,6 +2,7 @@
 #The COPYRIGHT file at the top level of this repository contains
 #the full copyright notices and license terms.
 from itertools import izip
+from trytond.model import Unique
 from trytond.pool import PoolMeta
 from trytond.transaction import Transaction
 
@@ -15,9 +16,10 @@ class AccountTemplate:
     @classmethod
     def __setup__(cls):
         super(AccountTemplate, cls).__setup__()
+        t = cls.__table__()
         cls._sql_constraints += [
-            ('code_uniq', 'UNIQUE(code, kind)', 'Account Code must be '
-                'unique per kind.'),
+            ('code_uniq', Unique(t, t.code, t.kind),
+                'Account Code must be unique per kind.'),
             ]
 
     @classmethod
@@ -50,11 +52,26 @@ class Account:
     @classmethod
     def __setup__(cls):
         super(Account, cls).__setup__()
+        # Fields not allowed to modify in accounts created from templates
+        cls._check_account_template = set(['code'])
+        t = cls.__table__()
         cls.parent.readonly = True
         cls._sql_constraints += [
-            ('code_uniq', 'UNIQUE(code, company)', 'Account Code must be '
-                'unique per company.'),
+            ('code_uniq', Unique(t, t.code, t.company),
+                'Account Code must be unique per company.'),
             ]
+        cls._error_messages.update({
+                'account_from_template': ('You can not modify/delete account '
+                    '"%s" because it is created from an account template.'),
+                })
+
+    @classmethod
+    def check_account_template(cls, accounts):
+        'Check accounts from templates to prevent modifications/deletions.'
+        for account in accounts:
+            if account.template:
+                cls.raise_user_error('account_from_template',
+                    (account.rec_name,))
 
     @classmethod
     def _find_children(cls, id, code, company_id):
@@ -131,6 +148,9 @@ class Account:
         actions = iter(args)
         to_check = []
         for accounts, values in zip(actions, actions):
+            if (not Transaction().context.get('update_from_template') and
+                    set(values.keys()) & cls._check_account_template):
+                cls.check_account_template(accounts)
             if 'code' in values or 'kind' in values:
                 to_check += [accounts, values]
         super(Account, cls).write(*args)
@@ -178,8 +198,18 @@ class Account:
 
     @classmethod
     def delete(cls, accounts):
+        if (not Transaction().context.get('update_from_template')):
+            cls.check_account_template(accounts)
         for account in accounts:
             cls.write(list(account.childs), {
                     'parent': account.parent and account.parent.id,
                     })
         return super(Account, cls).delete(accounts)
+
+    def update_account(self, template2account=None, template2type=None):
+        context = Transaction().context.copy()
+        context['update_from_template'] = True
+        with Transaction().set_context(context):
+            return super(Account, self).update_account(
+                template2account=template2account,
+                template2type=template2type)

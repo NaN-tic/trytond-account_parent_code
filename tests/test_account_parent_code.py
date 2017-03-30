@@ -1,28 +1,25 @@
-#!/usr/bin/env python
-# This file is part of Tryton.  The COPYRIGHT file at the top level of
-# this repository contains the full copyright notices and license terms.
+# This file is part of the account_parent_code module for Tryton.
+# The COPYRIGHT file at the top level of this repository contains the full
+# copyright notices and license terms.
 import unittest
 import trytond.tests.test_tryton
-from trytond.tests.test_tryton import test_depends
+from trytond.tests.test_tryton import ModuleTestCase
 from trytond.tests.test_tryton import POOL, DB_NAME, USER, CONTEXT
 from trytond.transaction import Transaction
 
 
-class AccountParentCodeTestCase(unittest.TestCase):
-    'Test AccountParentCode module'
+class AccountParentCodeTestCase(ModuleTestCase):
+    'Test Account Parent Code module'
+    module = 'account_parent_code'
 
     def setUp(self):
-        trytond.tests.test_tryton.install_module('account_parent_code')
+        super(AccountParentCodeTestCase, self).setUp()
         self.account_template = POOL.get('account.account.template')
         self.account = POOL.get('account.account')
         self.company = POOL.get('company.company')
         self.user = POOL.get('res.user')
         self.fiscalyear = POOL.get('account.fiscalyear')
         self.sequence = POOL.get('ir.sequence')
-
-    def test0006depends(self):
-        'Test depends'
-        test_depends()
 
     def test0010parent_code(self):
         'Test parent code'
