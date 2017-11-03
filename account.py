@@ -157,6 +157,10 @@ class Account:
         to_check = iter(to_check)
         for accounts, values in zip(to_check, to_check):
             for account in accounts:
+                # No need to check them accounts with templates as it is not
+                # possible to modify them, so we should trust template values
+                if account.template:
+                    continue
                 if account.childs:
                     cls.write(list(account.childs), {
                             'parent': account.parent and account.parent.id,
