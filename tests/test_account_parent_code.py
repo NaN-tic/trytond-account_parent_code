@@ -107,6 +107,7 @@ class AccountParentCodeTestCase(ModuleTestCase):
             account_copy2, = Account.copy([account_1])
             self.assertEqual(account_copy2.code, '1 (2)')
 
+
 def suite():
     suite = trytond.tests.test_tryton.suite()
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(

@@ -1,6 +1,6 @@
-#This file is part account_parent_code module for Tryton.
-#The COPYRIGHT file at the top level of this repository contains
-#the full copyright notices and license terms.
+# This file is part account_parent_code module for Tryton.
+# The COPYRIGHT file at the top level of this repository contains
+# the full copyright notices and license terms.
 from itertools import izip
 from trytond.model import Unique
 from trytond.pool import PoolMeta
@@ -41,7 +41,8 @@ class AccountTemplate:
                     if not cls.search([('code', '=', code)]):
                         break
                 default['code'] = code
-            new_templates += super(AccountTemplate, cls).copy([template], default=default)
+            new_templates += super(AccountTemplate, cls).copy(
+                [template], default=default)
         return new_templates
 
 
