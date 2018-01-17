@@ -18,7 +18,7 @@ class AccountTemplate:
         super(AccountTemplate, cls).__setup__()
         t = cls.__table__()
         cls._sql_constraints += [
-            ('code_uniq', Unique(t, t.code, t.kind),
+            ('code_uniq', Unique(t, t.code, t.kind, t.type),
                 'Account Code must be unique per kind.'),
             ]
 
