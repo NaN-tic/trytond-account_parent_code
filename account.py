@@ -1,7 +1,7 @@
 # This file is part account_parent_code module for Tryton.
 # The COPYRIGHT file at the top level of this repository contains
 # the full copyright notices and license terms.
-from itertools import izip
+
 from trytond.model import Unique
 from trytond.pool import PoolMeta
 from trytond.transaction import Transaction
@@ -9,8 +9,7 @@ from trytond.transaction import Transaction
 __all__ = ['AccountTemplate', 'Account']
 
 
-class AccountTemplate:
-    __metaclass__ = PoolMeta
+class AccountTemplate(metaclass=PoolMeta):
     __name__ = 'account.account.template'
 
     @classmethod
@@ -46,8 +45,7 @@ class AccountTemplate:
         return new_templates
 
 
-class Account:
-    __metaclass__ = PoolMeta
+class Account(metaclass=PoolMeta):
     __name__ = 'account.account'
 
     @classmethod
@@ -133,7 +131,7 @@ class Account:
             if code and 'parent' not in vals:
                 vals['parent'] = cls._find_parent(code, company_id)
         accounts = super(Account, cls).create(vlist)
-        for account, vals in izip(accounts, vlist):
+        for account, vals in zip(accounts, vlist):
             code = vals.get('code')
             if code and vals.get('kind') == 'view':
                 to_update = cls._find_children(account.id, code,
