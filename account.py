@@ -5,6 +5,8 @@
 from trytond.model import Unique
 from trytond.pool import PoolMeta
 from trytond.transaction import Transaction
+from trytond.i18n import gettext
+from trytond.exceptions import UserError
 
 __all__ = ['AccountTemplate', 'Account']
 
@@ -59,18 +61,15 @@ class Account(metaclass=PoolMeta):
             ('code_uniq', Unique(t, t.code, t.company),
                 'Account Code must be unique per company.'),
             ]
-        cls._error_messages.update({
-                'account_from_template': ('You can not modify/delete account '
-                    '"%s" because it is created from an account template.'),
-                })
 
     @classmethod
     def check_account_template(cls, accounts):
         'Check accounts from templates to prevent modifications/deletions.'
         for account in accounts:
             if account.template:
-                cls.raise_user_error('account_from_template',
-                    (account.rec_name,))
+                raise UserError(gettext(
+                    'account_parent_code.account_from_template',
+                    account=account.rec_name))
 
     @classmethod
     def _find_children(cls, id, code, company_id):
