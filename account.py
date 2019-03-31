@@ -7,6 +7,7 @@ from trytond.pool import PoolMeta
 from trytond.transaction import Transaction
 from trytond.i18n import gettext
 from trytond.exceptions import UserError
+from sql import Null
 
 __all__ = ['AccountTemplate', 'Account']
 
@@ -19,8 +20,8 @@ class AccountTemplate(metaclass=PoolMeta):
         super(AccountTemplate, cls).__setup__()
         t = cls.__table__()
         cls._sql_constraints += [
-            ('code_uniq', Unique(t, t.code, t.kind, t.type),
-                'Account Code must be unique per kind.'),
+            ('code_uniq', Unique(t, t.code, t.type),
+                'Account Code must be unique per type.'),
             ]
 
     @classmethod
@@ -79,7 +80,7 @@ class Account(metaclass=PoolMeta):
                 ('company', '=', company_id),
                 ('id', '!=', id),
                 ('code', 'ilike', '%s%%' % code),
-                ('kind', '=', 'view'),
+                ('type', '=', Null),
                 ])
         to_update = []
         for account in accounts:
@@ -105,7 +106,7 @@ class Account(metaclass=PoolMeta):
             invalid_ids = []
         domain = [
             ('id', 'not in', invalid_ids),
-            ('kind', '=', 'view')
+            ('type', '=', None)
             ]
         if company_id:
             domain.append(('company', '=', company_id))
@@ -132,7 +133,7 @@ class Account(metaclass=PoolMeta):
         accounts = super(Account, cls).create(vlist)
         for account, vals in zip(accounts, vlist):
             code = vals.get('code')
-            if code and vals.get('kind') == 'view':
+            if code and vals.get('type') == None:
                 to_update = cls._find_children(account.id, code,
                     account.company.id)
                 if to_update:
@@ -149,7 +150,7 @@ class Account(metaclass=PoolMeta):
             if (not Transaction().context.get('update_from_template') and
                     set(values.keys()) & cls._check_account_template):
                 cls.check_account_template(accounts)
-            if 'code' in values or 'kind' in values:
+            if 'code' in values or 'type' in values:
                 to_check += [accounts, values]
         super(Account, cls).write(*args)
         to_check = iter(to_check)
@@ -169,7 +170,7 @@ class Account(metaclass=PoolMeta):
                         account.company.id, invalid_ids=[account.id])
                 super(Account, cls).write([account], new_values)
                 new_account = cls(account.id)
-                if new_account.code and new_account.kind == 'view':
+                if new_account.code and new_account.type == None:
                     to_update = cls._find_children(new_account.id,
                         new_account.code, account.company.id)
                     if to_update:

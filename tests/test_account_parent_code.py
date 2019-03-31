@@ -26,12 +26,11 @@ class AccountParentCodeTestCase(ModuleTestCase):
             tpl_root, = AccountTemplate.create([{
                         'name': 'root',
                         'code': '',
-                        'kind': 'view',
                         }])
             tpl_account_1, = AccountTemplate.create([{
                         'name': 'Account 1',
                         'code': '1',
-                        'kind': 'view',
+                        'type': None,
                         }])
 
             tpl_account_copy, = AccountTemplate.copy([tpl_account_1])
@@ -43,31 +42,26 @@ class AccountParentCodeTestCase(ModuleTestCase):
             root, = Account.create([{
                         'name': 'root',
                         'code': '',
-                        'kind': 'view',
                         'company': company.id,
                         }])
             account_1, = Account.create([{
                         'name': 'Account 1',
                         'code': '1',
-                        'kind': 'view',
                         'company': company.id,
                         }])
             account_100, = Account.create([{
                         'name': 'Account 100',
                         'code': '100',
-                        'kind': 'view',
                         'company': company.id,
                         }])
             account_10, = Account.create([{
                         'name': 'Account 10',
                         'code': '10',
-                        'kind': 'view',
                         'company': company.id,
                         }])
             account_2, = Account.create([{
                         'name': 'Account 2',
                         'code': '2',
-                        'kind': 'view',
                         'company': company.id,
                         }])
 
