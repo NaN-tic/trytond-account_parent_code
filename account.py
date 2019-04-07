@@ -59,7 +59,7 @@ class Account(metaclass=PoolMeta):
         t = cls.__table__()
         cls.parent.readonly = True
         cls._sql_constraints += [
-            ('code_uniq', Unique(t, t.code, t.company),
+            ('code_uniq', Unique(t, t.code, t.type, t.company),
                 'Account Code must be unique per company.'),
             ]
 
@@ -80,7 +80,7 @@ class Account(metaclass=PoolMeta):
                 ('company', '=', company_id),
                 ('id', '!=', id),
                 ('code', 'ilike', '%s%%' % code),
-                ('type', '=', Null),
+                ('type', '=', None),
                 ])
         to_update = []
         for account in accounts:
