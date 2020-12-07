@@ -1,13 +1,11 @@
 # This file is part account_parent_code module for Tryton.
 # The COPYRIGHT file at the top level of this repository contains
 # the full copyright notices and license terms.
-
 from trytond.model import Unique
 from trytond.pool import PoolMeta
 from trytond.transaction import Transaction
 from trytond.i18n import gettext
 from trytond.exceptions import UserError
-from sql import Null
 
 __all__ = ['AccountTemplate', 'Account']
 
