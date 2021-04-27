@@ -58,7 +58,7 @@ class Account(metaclass=PoolMeta):
         cls.parent.readonly = True
         cls._sql_constraints += [
             ('code_uniq', Unique(t, t.code, t.type, t.company),
-                'Account Code must be unique per company.'),
+                'account_parent_code.msg_account_code_unique'),
             ]
 
     @classmethod
