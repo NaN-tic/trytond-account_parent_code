@@ -9,3 +9,7 @@ msgid ""
 msgstr ""
 "No puedes modificar/borrar la cuenta\n"
 "               \" (account)s\" porque se crea a partir de una plantilla de cuenta"
+
+msgctxt "model:ir.message,text:msg_account_code_unique"
+msgid "Account code must be unique per company."
+msgstr "El código de la cuenta debe ser único por empresa."
