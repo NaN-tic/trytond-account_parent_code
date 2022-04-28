@@ -1,15 +1,16 @@
-# This file is part of the account_parent_code module for Tryton.
-# The COPYRIGHT file at the top level of this repository contains the full
-# copyright notices and license terms.
-import unittest
-import trytond.tests.test_tryton
+
+# This file is part of Tryton.  The COPYRIGHT file at the top level of
+# this repository contains the full copyright notices and license terms.
+
+
 from trytond.tests.test_tryton import ModuleTestCase, with_transaction
 from trytond.pool import Pool
-from trytond.modules.company.tests import create_company, set_company
+from trytond.modules.company.tests import (CompanyTestMixin, create_company,
+    set_company)
 
 
-class AccountParentCodeTestCase(ModuleTestCase):
-    'Test Account Parent Code module'
+class AccountParentCodeTestCase(CompanyTestMixin, ModuleTestCase):
+    'Test AccountParentCode module'
     module = 'account_parent_code'
 
     @with_transaction()
@@ -102,8 +103,4 @@ class AccountParentCodeTestCase(ModuleTestCase):
             self.assertEqual(account_copy2.code, '1 (2)')
 
 
-def suite():
-    suite = trytond.tests.test_tryton.suite()
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(
-        AccountParentCodeTestCase))
-    return suite
+del ModuleTestCase
