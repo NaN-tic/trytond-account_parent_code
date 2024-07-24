@@ -4,11 +4,9 @@ msgstr "Content-Type: text/plain; charset=utf-8\n"
 
 msgctxt "model:ir.message,text:account_from_template"
 msgid ""
-"You can not modify/delete account\n"
-"              \"%(account)s\" because it is created from an account template"
+"You can not modify/delete account \"%(account)s\" because it is created from an account template"
 msgstr ""
-"No puedes modificar/borrar la cuenta\n"
-"               \" (account)s\" porque se crea a partir de una plantilla de cuenta"
+"No puedes modificar/borrar la cuenta \"%(account)s\" porque se crea a partir de una plantilla de cuenta"
 
 msgctxt "model:ir.message,text:msg_account_code_unique"
 msgid "Account code must be unique per company."
