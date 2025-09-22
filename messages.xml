@@ -7,6 +7,9 @@ this repository contains the full copyright notices and license terms. -->
           <field name="text">You can not modify/delete account "%(account)s" because it is created from an account template</field>
       </record>
       <record model="ir.message" id="msg_account_code_unique">
+          <field name="text">Account code must be unique.</field>
+      </record>
+      <record model="ir.message" id="msg_account_code_unique_per_company">
           <field name="text">Account code must be unique per company.</field>
       </record>
     </data>
