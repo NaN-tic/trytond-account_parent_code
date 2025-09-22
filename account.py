@@ -1,13 +1,13 @@
 # This file is part account_parent_code module for Tryton.
 # The COPYRIGHT file at the top level of this repository contains
 # the full copyright notices and license terms.
-from trytond.model import Unique
 from trytond.pool import PoolMeta
 from trytond.transaction import Transaction
 from trytond.i18n import gettext
 from trytond.exceptions import UserError
-
-__all__ = ['AccountTemplate', 'Account']
+from sql import Null
+from trytond.model import Exclude
+from sql.operators import Equal
 
 
 class AccountTemplate(metaclass=PoolMeta):
@@ -18,9 +18,19 @@ class AccountTemplate(metaclass=PoolMeta):
         super(AccountTemplate, cls).__setup__()
         t = cls.__table__()
         cls._sql_constraints += [
-            ('code_uniq', Unique(t, t.code, t.type),
-                'Account Code must be unique per type.'),
+            ('account_code_view_uniq', Exclude(t, (t.code, Equal),
+                where=(t.type == Null)), 'account_parent_code.msg_account_code_unique'),
+            ('account_code_normal_uniq', Exclude(t, (t.code, Equal),
+                where=(t.type != Null)), 'account_parent_code.msg_account_code_unique'),
             ]
+
+    @classmethod
+    def __register__(cls, module):
+        table_h = cls.__table_handler__(module)
+        super().__register__(module)
+
+        # Migration from 7.2: replace code uniq
+        table_h.drop_constraint('code_uniq')
 
     @classmethod
     def copy(cls, templates, default=None):
@@ -56,10 +66,21 @@ class Account(metaclass=PoolMeta):
         cls._check_account_template = set(['code'])
         t = cls.__table__()
         cls.parent.readonly = True
+
         cls._sql_constraints += [
-            ('code_uniq', Unique(t, t.code, t.type, t.company),
-                'account_parent_code.msg_account_code_unique'),
+            ('account_code_view_uniq', Exclude(t, (t.code, Equal), (t.company, Equal),
+                where=(t.type == Null)), 'account_parent_code.msg_account_code_unique_per_company'),
+            ('account_code_normal_uniq', Exclude(t, (t.code, Equal), (t.company, Equal),
+                where=(t.type != Null)), 'account_parent_code.msg_account_code_unique_per_company'),
             ]
+
+    @classmethod
+    def __register__(cls, module):
+        table_h = cls.__table_handler__(module)
+        super().__register__(module)
+
+        # Migration from 7.2: replace code uniq
+        table_h.drop_constraint('code_uniq')
 
     @classmethod
     def check_account_template(cls, accounts):

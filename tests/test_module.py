@@ -7,6 +7,7 @@ from trytond.tests.test_tryton import ModuleTestCase, with_transaction
 from trytond.pool import Pool
 from trytond.modules.company.tests import (CompanyTestMixin, create_company,
     set_company)
+from trytond.model.exceptions import SQLConstraintError
 
 
 class AccountParentCodeTestCase(CompanyTestMixin, ModuleTestCase):
@@ -17,7 +18,12 @@ class AccountParentCodeTestCase(CompanyTestMixin, ModuleTestCase):
     def test_parent_code(self):
         'Test parent code'
         pool = Pool()
+
+        TypeTemplate = pool.get('account.account.type.template')
+        Type = pool.get('account.account.type')
+
         AccountTemplate = pool.get('account.account.template')
+        Account = pool.get('account.account')
         Account = pool.get('account.account')
 
         company = create_company()
@@ -38,6 +44,26 @@ class AccountParentCodeTestCase(CompanyTestMixin, ModuleTestCase):
             self.assertEqual(tpl_account_copy.code, '1 (1)')
             tpl_account_copy2, = AccountTemplate.copy([tpl_account_1])
             self.assertEqual(tpl_account_copy2.code, '1 (2)')
+
+            # Type
+            template_type_parent, = TypeTemplate.create([{
+                        'name': 'Minimal Account Type Chart',
+                        'statement': None,
+                        }])
+            template_type_asset, = TypeTemplate.create([{
+                        'name': 'Asset',
+                        'statement': 'balance',
+                        'parent': template_type_parent,
+                        }])
+            type_parent, = Type.create([{
+                        'name': 'Minimal Account Type Chart',
+                        'statement': None,
+                        }])
+            type_asset, = Type.create([{
+                        'name': 'Asset',
+                        'statement': 'balance',
+                        'parent': type_parent,
+                        }])
 
             # Account
             root, = Account.create([{
@@ -102,5 +128,44 @@ class AccountParentCodeTestCase(CompanyTestMixin, ModuleTestCase):
             account_copy2, = Account.copy([account_1])
             self.assertEqual(account_copy2.code, '1 (2)')
 
+            # raise SQL Constraint when create new accounts that code exists
+            with self.assertRaises(SQLConstraintError):
+                AccountTemplate.create([{
+                            'name': 'Account 1',
+                            'code': '1',
+                            'type': None,
+                            }])
+
+            with self.assertRaises(SQLConstraintError):
+                Account.create([{
+                            'name': 'Account 1',
+                            'code': '1',
+                            'company': company.id,
+                            }])
+
+            AccountTemplate.create([{
+                        'name': 'Account 1',
+                        'code': '1',
+                        'type': template_type_asset,
+                        }])
+            Account.create([{
+                        'name': 'Account 1',
+                        'code': '1',
+                        'type': type_asset,
+                        }])
+
+            with self.assertRaises(SQLConstraintError):
+                AccountTemplate.create([{
+                            'name': 'Account 1',
+                            'code': '1',
+                            'type': template_type_asset,
+                            }])
+
+            with self.assertRaises(SQLConstraintError):
+                Account.create([{
+                            'name': 'Account 1',
+                            'code': '1',
+                            'type': type_asset,
+                            }])
 
 del ModuleTestCase
