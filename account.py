@@ -14,14 +14,23 @@ class AccountTemplate(metaclass=PoolMeta):
     __name__ = 'account.account.template'
 
     @classmethod
+    def __setup__(cls):
+        super(AccountTemplate, cls).__setup__()
+        t = cls.__table__()
+        cls._sql_constraints += [
+            ('account_code_view_uniq', Exclude(t, (t.code, Equal),
+                where=(t.type == Null)), 'account_parent_code.msg_account_code_unique'),
+            ('account_code_normal_uniq', Exclude(t, (t.code, Equal),
+                where=(t.type != Null)), 'account_parent_code.msg_account_code_unique'),
+            ]
+
+    @classmethod
     def __register__(cls, module):
         table_h = cls.__table_handler__(module)
         super().__register__(module)
 
         # Migration from 7.2: replace code uniq
         table_h.drop_constraint('code_uniq')
-        table_h.drop_constraint('account_code_view_uniq')
-        table_h.drop_constraint('account_code_normal_uniq')
 
     @classmethod
     def copy(cls, templates, default=None):
