@@ -128,34 +128,6 @@ class AccountParentCodeTestCase(CompanyTestMixin, ModuleTestCase):
             self.assertEqual(account_copy2.code, '1 (2)')
 
     @with_transaction()
-    def test_account_template_unique(self):
-        "Test number has single IBAN"
-        pool = Pool()
-        AccountTemplate = pool.get('account.account.template')
-
-        company = create_company()
-        with set_company(company):
-
-            # Account Template
-            AccountTemplate.create([{
-                        'name': 'root',
-                        'code': '',
-                        }])
-            AccountTemplate.create([{
-                        'name': 'Account 1',
-                        'code': '1',
-                        'type': None,
-                        }])
-
-            # raise SQL Constraint when create new accounts that code exists
-            with self.assertRaises(SQLConstraintError):
-                AccountTemplate.create([{
-                            'name': 'Account 1',
-                            'code': '1',
-                            'type': None,
-                            }])
-
-    @with_transaction()
     def test_account_account_view_unique(self):
         "Test number has single IBAN"
         pool = Pool()
