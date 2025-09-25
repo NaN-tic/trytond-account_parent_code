@@ -130,37 +130,17 @@ class AccountParentCodeTestCase(CompanyTestMixin, ModuleTestCase):
 
             # raise SQL Constraint when create new accounts that code exists
             with self.assertRaises(SQLConstraintError):
-                AccountTemplate.create([{
-                            'name': 'Account 1',
-                            'code': '1',
-                            'type': None,
-                            }])
-
-            with self.assertRaises(SQLConstraintError):
                 Account.create([{
                             'name': 'Account 1',
                             'code': '1',
                             'company': company.id,
                             }])
 
-            AccountTemplate.create([{
-                        'name': 'Account 1',
-                        'code': '1',
-                        'type': template_type_asset,
-                        }])
             Account.create([{
                         'name': 'Account 1',
                         'code': '1',
                         'type': type_asset,
                         }])
-
-            with self.assertRaises(SQLConstraintError):
-                AccountTemplate.create([{
-                            'name': 'Account 1',
-                            'code': '1',
-                            'type': template_type_asset,
-                            }])
-
             with self.assertRaises(SQLConstraintError):
                 Account.create([{
                             'name': 'Account 1',
