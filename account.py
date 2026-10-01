@@ -56,7 +56,7 @@ class Account(metaclass=PoolMeta):
         # Fields not allowed to modify in accounts created from templates
         cls._check_account_template = set(['code'])
         t = cls.__table__()
-        cls.parent.readonly = True
+        cls.parent.states['editable'] = False
 
         cls._sql_constraints += [
             ('account_code_view_uniq', Exclude(t, (t.code, Equal), (t.company, Equal),
