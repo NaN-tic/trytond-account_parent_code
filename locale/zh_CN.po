@@ -1,0 +1,23 @@
+#
+msgid ""
+msgstr ""
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#, python-format
+msgctxt "model:ir.message,text:account_from_template"
+msgid ""
+"You can not modify/delete account \"%(account)s\" because it is created from"
+" an account template"
+msgstr "无法修改或删除科目“%(account)s”，因为它是根据科目模板创建的。"
+
+msgctxt "model:ir.message,text:msg_account_code_unique"
+msgid "Account code must be unique."
+msgstr "科目编码必须唯一。"
+
+msgctxt "model:ir.message,text:msg_account_code_unique_per_company"
+msgid "Account code must be unique per company."
+msgstr "同一公司内的科目编码必须唯一。"
