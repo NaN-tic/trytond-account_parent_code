@@ -1,0 +1,24 @@
+#
+msgid ""
+msgstr ""
+"Language: km\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#, python-format
+msgctxt "model:ir.message,text:account_from_template"
+msgid ""
+"You can not modify/delete account \"%(account)s\" because it is created from "
+"an account template"
+msgstr ""
+"មិនអាចកែប្រែ ឬលុបគណនី «%(account)s» បានទេ ព្រោះវាត្រូវបានបង្កើតពីគំរូគណនី។"
+
+msgctxt "model:ir.message,text:msg_account_code_unique"
+msgid "Account code must be unique."
+msgstr "កូដគណនីត្រូវមានតែមួយគត់។"
+
+msgctxt "model:ir.message,text:msg_account_code_unique_per_company"
+msgid "Account code must be unique per company."
+msgstr "កូដគណនីត្រូវមានតែមួយគត់ក្នុងក្រុមហ៊ុននីមួយៗ។"
